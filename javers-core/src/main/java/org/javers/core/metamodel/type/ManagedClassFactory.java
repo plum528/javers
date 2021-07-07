@@ -3,6 +3,7 @@ package org.javers.core.metamodel.type;
 import org.javers.common.collections.Lists;
 import org.javers.common.reflection.ReflectionUtil;
 import org.javers.core.metamodel.annotation.DiffIgnore;
+import org.javers.core.metamodel.annotation.ValueObject;
 import org.javers.core.metamodel.clazz.ClientsClassDefinition;
 import org.javers.core.metamodel.property.Property;
 import org.javers.core.metamodel.scanner.ClassScan;
@@ -47,12 +48,21 @@ class ManagedClassFactory {
 
     private List<JaversProperty> convert(List<Property> properties) {
         return Lists.transform(properties,  p -> {
+            if (p.hasShallowReferenceAnn() && p.getRawType().isAnnotationPresent(ValueObject.class)){
+                return convert(p);
+            }
+
             if (typeMapper.contains(p.getGenericType())) {
                 final JaversType javersType = typeMapper.getJaversType(p.getGenericType());
                 return new JaversProperty(() -> javersType, p);
             }
             return new JaversProperty(() -> typeMapper.getJaversType(p.getGenericType()), p);
         });
+    }
+
+    private JaversProperty convert(Property p){
+        final JaversType javersType = typeMapper.getJaversTypeShallow(p.getGenericType());
+        return new JaversProperty(() -> javersType, p);
     }
 
     private List<JaversProperty> filterIgnoredType(List<JaversProperty> properties, final Class<?> currentClass){

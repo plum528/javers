@@ -56,4 +56,8 @@ public class LiveCdoFactory {
     GlobalIdFactory getGlobalIdFactory() {
         return globalIdFactory;
     }
+
+    public GlobalId createIdForShallow(Object cdo) {
+        return globalIdFactory.createIdForShallow(cdo);
+    }
 }

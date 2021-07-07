@@ -141,4 +141,24 @@ public class GlobalIdFactory {
     private boolean hasOwner(OwnerContext context) {
         return context != null && context.getOwnerId() != null;
     }
+
+    public GlobalId createIdForShallow(Object targetCdo) {
+        Validate.argumentsAreNotNull(targetCdo);
+
+        Optional<ObjectAccessProxy> cdoProxy = objectAccessHook.createAccessor(targetCdo);
+
+        Class<?> targetClass = cdoProxy.map((p) -> p.getTargetClass()).orElse(targetCdo.getClass());
+        ManagedType targetManagedType = typeMapper.getJaversManagedTypeSr(targetClass);
+
+        if (targetManagedType instanceof EntityType) {
+            if (cdoProxy.isPresent() && cdoProxy.get().getLocalId().isPresent()){
+                return createInstanceId(cdoProxy.get().getLocalId().get(), targetClass);
+            }
+            else {
+                return ((EntityType) targetManagedType).createIdFromInstance(targetCdo);
+            }
+        }
+
+        throw new JaversException(JaversExceptionCode.NOT_IMPLEMENTED);
+    }
 }

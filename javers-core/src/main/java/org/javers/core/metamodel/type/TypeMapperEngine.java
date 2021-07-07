@@ -23,6 +23,8 @@ class TypeMapperEngine {
     private final Map<String, JaversType> mappedTypes = new ConcurrentHashMap<>();
     private final Map<DuckType, Class> mappedTypeNames = new ConcurrentHashMap<>();
 
+    private final Map<String, JaversType> sfMappedTypes = new ConcurrentHashMap<>();
+
     private void putIfAbsent(Type javaType, final JaversType jType) {
         Validate.argumentsAreNotNull(javaType, jType);
         if (contains(javaType)) {
@@ -92,6 +94,37 @@ class TypeMapperEngine {
             addFullMapping(javaType, newType);
             return newType;
         }
+    }
+
+    JaversType computeIfAbsentSf(Type javaType, Function<Type, JaversType> computeFunction) {
+        JaversType javersType = sfMappedTypes.get(javaType.toString());
+        if (javersType != null) {
+            return javersType;
+        }
+
+        synchronized (javaType) {
+            //map.contains double check
+            JaversType mappedType = sfMappedTypes.get(javaType.toString());
+            if (mappedType != null) {
+                return mappedType;
+            }
+
+            JaversType newType = computeFunction.apply(javaType);
+            addFullMappingSf(javaType, newType);
+            return newType;
+        }
+    }
+
+    private void addFullMappingSf(Type javaType, JaversType newType){
+        Validate.argumentsAreNotNull(javaType, newType);
+
+        sfMappedTypes.put(javaType.toString(), newType);
+
+        /*if (newType instanceof ManagedType){
+            ManagedType managedType = (ManagedType)newType;
+            mappedTypeNames.put(new DuckType(managedType.getName()), ReflectionUtil.extractClass(javaType));
+            mappedTypeNames.put(new DuckType(managedType), ReflectionUtil.extractClass(javaType));
+        }*/
     }
 
     private void addFullMapping(Type javaType, JaversType newType){

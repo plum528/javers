@@ -33,7 +33,7 @@ class EdgeBuilder {
             LiveNode targetNode = buildNodeStubOrReuse(cdo);
             return new SingleEdge(singleRef, targetNode);
         }
-        return new ShallowSingleEdge(singleRef, cdoFactory.createId(rawReference, ownerContext));
+        return new ShallowSingleEdge(singleRef, cdoFactory.createIdForShallow(rawReference));
     }
 
     private OwnerContext createOwnerContext(ObjectNode parentNode, JaversProperty property) {

@@ -5,7 +5,6 @@ import org.javers.common.exception.JaversExceptionCode;
 import org.javers.common.reflection.ReflectionUtil;
 import org.javers.common.validation.Validate;
 import org.javers.core.JaversCoreConfiguration;
-import org.javers.core.metamodel.annotation.Value;
 import org.javers.core.metamodel.clazz.ClientsClassDefinition;
 import org.javers.core.metamodel.object.GlobalId;
 import org.javers.core.metamodel.property.Property;
@@ -120,6 +119,15 @@ public class TypeMapper {
         }
 
         return engine.computeIfAbsent(javaType, j -> typeFactory.infer(j, findPrototype(j)));
+    }
+
+    public JaversType getJaversTypeShallow(Type javaType){
+        argumentIsNotNull(javaType);
+        if (javaType == Object.class) {
+            return OBJECT_TYPE;
+        }
+
+        return engine.computeIfAbsentSf(javaType, typeFactory::createForShallow);
     }
 
     public boolean isShallowReferenceType(Type javaType) {
@@ -278,5 +286,18 @@ public class TypeMapper {
         }
 
         return Optional.empty();
+    }
+
+    public ManagedType getJaversManagedTypeSr(Class<?> javaClass) {
+        JaversType mType = getJaversTypeShallow(javaClass);
+
+        if (ManagedType.class.isAssignableFrom(mType.getClass())) {
+            return (ManagedType) mType;
+        } else {
+            throw new JaversException(JaversExceptionCode.MANAGED_CLASS_MAPPING_ERROR,
+                    javaClass,
+                    mType.getClass().getSimpleName(),
+                    ManagedType.class.getSimpleName());
+        }
     }
 }

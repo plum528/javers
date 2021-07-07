@@ -104,6 +104,13 @@ class TypeFactory {
                 .orElseGet(() -> createDefaultType(javaRichType)));
     }
 
+    JaversType createForShallow(Type javaType) {
+        final JavaRichType t = new JavaRichType(javaType);
+
+        EntityDefinition def = entityDefinition(t.javaClass).withTypeName(t.getAnnTypeName()).build();
+        return entityTypeFactory.createEntity(def, t.scan);
+    }
+
     private Optional<JaversType> resolveIfTokenType(Type javaType) {
         if (javaType instanceof TypeVariable) {
             logger.debug("javersType of '{}' inferred as TokenType", javaType);
